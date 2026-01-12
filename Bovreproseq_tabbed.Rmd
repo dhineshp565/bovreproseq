@@ -114,20 +114,18 @@ for (i in sampleid){
   cat('<a href="data:text/plain;charset=utf-8;base64,', encoded_content, '" download="', file_name, '">Download FASTA file</a>')
   
   cat('\n\n<!-- -->\n\n')
+  
 
-
+  bracken_id <- (paste(i,"_bracken.tsv",sep=""))
+  bracken_raw <- read.csv(bracken_id,header = TRUE,sep = "\t")
+  bracken_final <- bracken_raw[,c(1,6,7)]
+  colnames(bracken_final) <- c("Organsim","Total reads", "Relative abundance")
+  print(knitr::kable(bracken_final,align = "lcc",caption = "Bracken Species Abundance Table.Generated using kraken2 (kraken2 (https://ccb.jhu.edu/software/kraken2/) and Bracken (https://doi.org/10.7717/peerj-cs.104)") 
+  %>%
+    kable_styling())
 }
 ```
 <br>
 
 <br>
 
-## Taxonomic classification of raw reads   
-##### Generated using kraken2 (kraken2 (https://ccb.jhu.edu/software/kraken2/) and krona (https://github.com/marbl/Krona)
-```{r, echo=FALSE}
-library("htmltools")
-htmltools::tags$iframe(
-  src = base64enc::dataURI(file= params$krona, mime="text/html; charset=UTF-8"),
-  style="border:10; position:relative; top:0; left:; right::; bottom:; width:100%; height:800px"
-)
-```
