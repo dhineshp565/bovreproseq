@@ -87,19 +87,24 @@
                     ]
                 },
                 "dehost": {
-                    "type": "string",
+                    "type": "boolean",
                     "description": "Remove host (bovine) DNA reads from analysis",
+                    "default": "true",
                     "enum": [
-                        "Yes"
+                        "true",
+                        "false"
                     ]
     
                 },
                 "host_db": {
-                    "type": "string",
+                    "type": ["string", "null"],
                     "default": "/data/referenceDB/kraken/k2_bos_taurus_db_12012026",
                     "description": "Path to kraken db with host genome for dehosting",
                     "format": "directory-path",
-                    "fa_icon": "fas fa-database"
+                    "fa_icon": "fas fa-database",
+                    "enum": [
+                        "null"
+                    ]
                 }
                     
             }

@@ -61,8 +61,11 @@ workflow {
 	
 	// create consensus
 	splitbam(minimap2.out,primerbed,params.read_count_threshold,params.consensus_mode,params.qscore)
-
-
+	if (params.dehost) {
+		stats=DEHOST.out.stats
+	} else {
+		stats=splitbam.out.unfilt_stats
+	}
 	//medaka polishing
 
 		// Pair fastq file and consensus files by sample name
@@ -79,8 +82,7 @@ workflow {
 	// qc report using split bam out put
 	idxstats=splitbam.out.idxstats
 	nanoqc=nanoplot.out.stats_ufilt	
-	dehosted_stats=DEHOST.out.stats
-	multiqc(nanoqc.mix(idxstats,dehosted_stats).collect())
+	multiqc(nanoqc.mix(idxstats,stats).collect())
 	
 	// abricate 
 	dbdir=("${baseDir}/Bovreproseq_db")
