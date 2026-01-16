@@ -2,14 +2,14 @@
 
 process bracken {
 publishDir "${params.out_dir}/bracken/",mode:"copy"
-label "low"
+label "high"
 
 input:
-tuple val(SampleName),path(SamplePath)
-path (kraken_report)
-path (kraken_db)
+tuple val(SampleName), path(kraken_output),path(kraken_report)
+path(kraken_db)
+
 output:
-path ("${SampleName}_bracken.tsv")
+tuple val(SampleName), path("${SampleName}_bracken.tsv")
 
 script:
 """

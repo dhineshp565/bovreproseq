@@ -15,6 +15,7 @@ process make_report {
 	path(mlst)
 	path(cons)
     path (bracken)
+	path(blast)
 	output:
 	path("*.html")
 	script:

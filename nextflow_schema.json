@@ -12,7 +12,9 @@
             "description": "Define where the pipeline should find input data and save output data.",
             "required": [
                 "input",
-                "kraken_db"
+                "kraken_db",
+                "blastdb_path",
+                "blastdb_name"
             ],
             "properties": {
                 "input": {
@@ -30,6 +32,18 @@
                     "fa_icon": "fas fa-database",
                     "description": "Path to kraken2 database",
                     "default": "/data/referenceDB/kraken/k2_pluspf_08gb_20230605"
+                },
+                 "blastdb_path": {
+                    "type": "string",
+                    "default": "/data/referenceDB/blast/microbe_db",
+                    "format": "directory-path",
+                    "fa_icon": "fas fa-database",
+                    "description": "Path to blast database"
+                },
+                 "blastdb_name": {
+                    "type": "string",
+                    "default": "microbe_db",
+                    "description": "Name of the blast database"
                 },
                 "out_dir": {
                     "type": "string",

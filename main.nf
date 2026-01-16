@@ -20,6 +20,7 @@ include { bracken } from './modules/local/bracken.nf'
 
 // Include dehost subworkflow
 include { DEHOST } from './subworkflows/dehost.nf'
+include { METAGENOMICS } from './subworkflows/metagenomics.nf'
 
 
 workflow {
@@ -58,13 +59,6 @@ workflow {
 		minimap2(reference, reads_for_alignment)
 	}
 	
-
-	
-
-	kraken2(reads_for_alignment, params.kraken_db)
-	bracken(kraken2.out, params.kraken_db)
-	
-	
 	// create consensus
 	splitbam(minimap2.out,primerbed,params.read_count_threshold,params.consensus_mode,params.qscore)
 
@@ -78,15 +72,15 @@ workflow {
 	
 	medaka (paired_fastq_consensus)
 
-
-	krona_kraken(kraken2.out.kraken2_raw.collect())
+	//kraken2(reads_for_alignment, params.kraken_db)
+	//bracken(kraken2.out, params.kraken_db)
+	//krona_kraken(kraken2.out.kraken2_raw.collect())
 	
 	// qc report using split bam out put
-	stats=splitbam.out.unfilt_stats
 	idxstats=splitbam.out.idxstats
 	nanoqc=nanoplot.out.stats_ufilt	
 	dehosted_stats=DEHOST.out.stats
-	multiqc(nanoqc.mix(stats,idxstats,dehosted_stats).collect())
+	multiqc(nanoqc.mix(idxstats,dehosted_stats).collect())
 	
 	// abricate 
 	dbdir=("${baseDir}/Bovreproseq_db")
@@ -97,9 +91,13 @@ workflow {
 	//blast_cons(splitbam.out.consensus,tax,db1)
 
 	mlst(medaka.out.consensus)
+	METAGENOMICS (reads_for_alignment,params.kraken_db,params.blastdb_path,params.blastdb_name)
 	//generate report
 	rmd_file=file("${baseDir}/Bovreproseq_tabbed.Rmd")
-	make_report(make_csv.out,krona_kraken.out.raw,splitbam.out.mapped.collect(),abricate.out.abricate.collect(),abricate.out.results.collect(),rmd_file,mlst.out.collect(),medaka.out.cons_only.collect(),bracken.out.collect())
+	meta_bracken=METAGENOMICS.out.bracken_output.map{ sample, file -> file }.collect()
+	meta_blast= METAGENOMICS.out.blast_best.map {sample, file -> file}.collect()
+	make_report(make_csv.out,METAGENOMICS.out.krona_output,splitbam.out.mapped.collect(),abricate.out.abricate.collect(),abricate.out.results.collect(),rmd_file,mlst.out.collect(),medaka.out.cons_only.collect(),meta_bracken,meta_blast)
+	
 	
 	
 }

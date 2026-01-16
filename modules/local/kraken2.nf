@@ -1,6 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+
 process kraken2 {
 	publishDir "${params.out_dir}/kraken2/",mode:"copy"
 	label "high"
@@ -9,8 +10,8 @@ process kraken2 {
 	path(db_path)
 	
 	output:
-	tuple val(SampleName),path ("${SampleName}_kraken.csv")
-    path ("${SampleName}_kraken_report.csv"),emit:(kraken2_raw)
+	tuple val(SampleName), path("${SampleName}_kraken.csv"), emit: kraken_output
+    tuple val(SampleName), path("${SampleName}_kraken_report.csv"), emit: kraken_report
 	
 	
 	script:
@@ -20,3 +21,4 @@ process kraken2 {
 	
 	"""
 }
+
