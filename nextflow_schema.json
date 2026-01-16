@@ -82,6 +82,7 @@
                 "trim_barcodes": {
                     "type": "boolean",
                     "description": "Select Yes to trim barcodes and adpter sequences",
+                    "default": false,
                     "enum": [ true,
                         false
                     ]
