@@ -1,0 +1,12 @@
+# Nextflow
+.nextflow*
+work/
+trace*.txt
+timeline*.html
+report*.html
+dag*.html
+.nextflow.log
+
+# System
+.DS_Store
+Thumbs.db
