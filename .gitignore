@@ -7,6 +7,8 @@ report*.html
 dag*.html
 .nextflow.log
 
+
 # System
 .DS_Store
 Thumbs.db
+settings.json

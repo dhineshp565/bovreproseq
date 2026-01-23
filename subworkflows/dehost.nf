@@ -56,7 +56,7 @@ process kraken2_dehost{
 	
 	script:
 	"""
-	kraken2 --db /data/referenceDB/kraken/k2_bos_taurus_db_12012026/ --output ${SampleName}_kraken_dehost.csv --report ${SampleName}_kraken_dehost_report.csv --unclassified-out ${SampleName}_dehosted.fastq --classified-out ${SampleName}_bostaurus.fastq.gz ${fastq}
+	kraken2 --db ${host_db} --output ${SampleName}_kraken_dehost.csv --report ${SampleName}_kraken_dehost_report.csv --unclassified-out ${SampleName}_dehosted.fastq --classified-out ${SampleName}_bostaurus.fastq.gz ${fastq}
 	gzip  ${SampleName}_dehosted.fastq
 	"""
 }

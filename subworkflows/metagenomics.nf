@@ -4,8 +4,7 @@ nextflow.enable.dsl=2
 include { kraken2 } from '../modules/local/kraken2.nf'
 include { bracken } from '../modules/local/bracken.nf'
 include { krona_kraken } from '../modules/local/krona_kraken.nf'
-
-
+include { medaka } from '../modules/local/medaka.nf'
 
 
 process extract_reads {
@@ -55,25 +54,19 @@ process megahit {
     # Loop through taxids using cat - create combined assembly file
     for taxid in \$(cat ${taxids}); do
       
-        # Check if input fastq exists and has content
-        if [ -s "${SampleName}_\${taxid}.fastq" ]; then
-            # remove if there is a outdir - to prevent crashing new runs
-            rm -rf ${SampleName}_\${taxid}_assembly
-            # Run megahit
-            megahit -r "${SampleName}_\${taxid}.fastq" -o ${SampleName}_\${taxid}_assembly -t 2
+        megahit -r "${SampleName}_\${taxid}.fastq" -o ${SampleName}_\${taxid}_assembly --k-list 41,61,81,99 --prune-level 1 --min-contig-len 200
 
-            # Process output - append to combined assembly file
-            if [ -s "${SampleName}_\${taxid}_assembly/final.contigs.fa" ]; then
-                # Rename headers to include taxID and append
-                sed -E "s/>k[0-9]+_/>${SampleName}_\${taxid}_contig_/g" "${SampleName}_\${taxid}_assembly/final.contigs.fa" >> ${SampleName}_metagenomes.fasta
-            fi
+        # Process output - append to combined assembly file
+        if [ -s "${SampleName}_\${taxid}_assembly/final.contigs.fa" ]; then
+            # Rename headers to include taxID and append
+             sed -E "s/>k[0-9]+_/>${SampleName}_\${taxid}_contig_/g" "${SampleName}_\${taxid}_assembly/final.contigs.fa" >> ${SampleName}_metagenomes.fasta
         fi
     done
     
     # If no contigs were assembled, add placeholder
     if [ ! -s ${SampleName}_metagenomes.fasta ]; then
         echo ">${SampleName}_no_assembly" > ${SampleName}_metagenomes.fasta
-        echo "N" >> ${SampleName}_metagenomes.fasta
+        echo "NNNN" >> ${SampleName}_metagenomes.fasta
     fi
     """
 }
@@ -109,7 +102,6 @@ process blast_cons {
 	label "high"
 	input:
 	tuple val(SampleName),path(consensus)
-	//tuple val(SampleNAme),path(sanger_reads)
 	path (blastdb_path)
 	val(blastdb_name)
 
@@ -122,11 +114,12 @@ process blast_cons {
 	
 
 	# Run BLAST
-	blastn -db ${blastdb_path}/${blastdb_name} -query ${consensus} -out ${SampleName}_blast.tsv -outfmt "7 qseqid sseqid length qcovs pident evalue staxids ssciname scomnames stitle" -max_target_seqs 5
+	blastn -task megablast -perc_identity 95 -db ${blastdb_path}/${blastdb_name} -query ${consensus} -out ${SampleName}_blast.tsv -outfmt "7 qseqid sseqid length qcovs pident evalue staxids ssciname scomnames stitle" -max_target_seqs 5
 
 	# Build report files from BLAST output
 	make_blast_report.sh "${SampleName}"
-        """
+
+    """
 
 }
 
@@ -134,8 +127,8 @@ workflow METAGENOMICS {
     take:
 	reads // Channel: tuple val(SampleName), path(fastq)
 	kraken_db  // Path: kraken database
-    blastdb_path
-    blastdb_name
+    blastdb_path // Path to blast database
+    blastdb_name // Name of blast database
 	
 	main:
 	// Run kraken2
@@ -160,12 +153,14 @@ workflow METAGENOMICS {
 	
 	extract_reads(extract_reads_input)
 	megahit(extract_reads.out)
-    krona_kraken(kraken2.out.kraken_output.map{ sample, file -> file }.collect())
+    //medaka_input = reads.join(megahit.out).map{sample,fastq,draft_fasta -> tuple (sample,fastq,draft_fasta)}
+   // medaka(medaka_input)
+    krona_kraken(kraken2.out.kraken_report.map{ sample, file -> file }.collect())
     //refseq_masher(megahit.out)
     blast_cons(megahit.out,blastdb_path,blastdb_name)
 	
 	emit:
-	metagenomes = megahit.out
+	metagenomes = megahit.out.map{sample,consensus -> consensus}
 	kraken_output = kraken2.out.kraken_output
 	kraken_report = kraken2.out.kraken_report
 	bracken_output = bracken.out
@@ -176,4 +171,3 @@ workflow METAGENOMICS {
     blast_best=blast_cons.out.blast_best
 	
 }
-
