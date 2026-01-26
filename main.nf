@@ -68,6 +68,8 @@ workflow {
 	//blast_cons(splitbam.out.consensus,tax,db1)
 
 	mlst(AMPLICONS.out.consensus)
+	IGVREPORTS(reference,AMPLICONS.out.bam.collect())
+
 	METAGENOMICS (reads_for_alignment,params.kraken_db,params.blastdb_path,params.blastdb_name)
 	//generate report
 	rmd_file=file("${baseDir}/Bovreproseq_tabbed.Rmd")

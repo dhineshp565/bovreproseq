@@ -19,6 +19,8 @@ process splitbam {
 	path("${SampleName}_consensus.fasta"),emit:(cons_only)
 	path("${SampleName}_unfilt_stats.txt"),emit:unfilt_stats
 	path ("${SampleName}_full_length_mappedreads.txt"),emit:full_reads
+	path("${SampleName}.bam"),emit:target_bam
+	path("${SampleName}.bai"),emit:target_bai
 	script:
 	"""
 	splitbam.sh ${SampleName} ${samfile} ${primerbed} ${readcount} ${consensus_mode} ${qscore}
