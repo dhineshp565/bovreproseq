@@ -8,6 +8,7 @@ output:
 params:
   csv: ""
   krona: ""
+  igv: ""
 ---
 
 ```{r setup, include=FALSE}
@@ -39,7 +40,7 @@ for (i in sampleid){
   
   results <- (paste(i,"_results.csv",sep=""))
   results_df <- read.csv(results,header = TRUE,sep = ",")
-  colnames (results_df) <- c("SAMPLEID","PATHOGEN","RESULT","QC STATUS") # column names
+  colnames (results_df) <- c("SAMPLEID","PATHOGEN","RESULT","QC_STATUS") # column names
   #print (knitr::kable(results_df,align="llll",caption = "RESULTS SUMMARY - Based on abricate results")) 
   # Create a logical vector indicating where the "Positive" values are
   # Assuming results_df is your data frame and RESULT is the column containing "Positive"
@@ -49,7 +50,7 @@ for (i in sampleid){
 
 
   # Generate the table with kable
-  table_html <- knitr::kable(results_df, align = "llll", caption = "RESULTS SUMMARY - Based on abricate results with custom Bovreproseq database. For more info: Seemann T, Abricate, Github https://github.com/tseemann/abricate") %>%
+  table_html <- knitr::kable(results_df, col.names = c("SAMPLEID","PATHOGEN","RESULT","QC STATUS"), align = "llll", caption = "RESULTS SUMMARY - Based on abricate results with custom Bovreproseq database. For more info: Seemann T, Abricate, Github https://github.com/tseemann/abricate") %>%
     kable_styling()
 
   # Apply row highlighting
@@ -122,5 +123,15 @@ for (i in sampleid){
 ```
 <br>
 
+## IGV report - Coverage and depth [IGV](https://software.broadinstitute.org/software/igv/)
+
+```{r, echo=FALSE}
+library("htmltools")
+htmltools::tags$iframe(
+  src = base64enc::dataURI(file= params$igv, mime="text/html; charset=UTF-8"),
+  style="border:10; position:relative; top:0; left:; right::; bottom:; width:100%; height:800px"
+)
+```
 <br>
+
 

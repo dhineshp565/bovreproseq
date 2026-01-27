@@ -32,7 +32,7 @@ workflow AMPLICONS {
     idxstats    = splitbam.out.idxstats
     mapped      = splitbam.out.mapped
     bam         = splitbam.out.target_bam
-    bai         = splitbam.out.target_bai
+   
 
 
 

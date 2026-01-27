@@ -24,6 +24,7 @@ include { DEHOST } from './subworkflows/dehost.nf'
 include { AMPLICONS } from './subworkflows/amplicons.nf'
 include { METAGENOMICS } from './subworkflows/metagenomics.nf'
 include { QCREADS } from './subworkflows/qcreads.nf'
+include { IGVREPORT } from './subworkflows/igvreport.nf'
 
 
 workflow {
@@ -68,14 +69,14 @@ workflow {
 	//blast_cons(splitbam.out.consensus,tax,db1)
 
 	mlst(AMPLICONS.out.consensus)
-	IGVREPORTS(reference,AMPLICONS.out.bam.collect())
+	IGVREPORT(reference,AMPLICONS.out.bam)
 
 	METAGENOMICS (reads_for_alignment,params.kraken_db,params.blastdb_path,params.blastdb_name)
 	//generate report
 	rmd_file=file("${baseDir}/Bovreproseq_tabbed.Rmd")
 	meta_bracken=METAGENOMICS.out.bracken_output.map{ sample, file -> file }.collect()
 	meta_blast= METAGENOMICS.out.blast_best.map {sample, file -> file}.collect()
-	make_report(QCREADS.out.csv,METAGENOMICS.out.krona_output,AMPLICONS.out.mapped.collect(),abricate.out.abricate.collect(),abricate.out.results.collect(),rmd_file,mlst.out.collect(),AMPLICONS.out.cons_only.collect(),meta_bracken,meta_blast)
+	make_report(QCREADS.out.csv,METAGENOMICS.out.krona_output,AMPLICONS.out.mapped.collect(),abricate.out.abricate.collect(),abricate.out.results.collect(),rmd_file,mlst.out.collect(),AMPLICONS.out.cons_only.collect(),meta_bracken,meta_blast,IGVREPORT.out)
 	
 	//generate metagenomics report
 	rmd_meta_file=file("${baseDir}/ont_metagenomics.Rmd")

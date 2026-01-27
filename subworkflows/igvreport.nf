@@ -26,7 +26,7 @@ process bedtools {
     publishDir "${params.out_dir}/bedtools/"
     
     input:
-    tuple val(SampleName), path (bam)
+    tuple val(SampleName), path (bam),path (bai)
     
     output:
     path ("${SampleName}*.bedgraph")
@@ -56,7 +56,7 @@ process igvreports {
     """
 }
 
-workflow IGVREPORTS {
+workflow IGVREPORT {
     
     take:
     reference
