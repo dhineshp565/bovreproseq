@@ -13,7 +13,7 @@ process splitbam {
 
 	output:
 	val(SampleName),emit:SampleName
-	path("${SampleName}_mappedreads.txt"),emit:mapped
+	tuple val(SampleName), path("${SampleName}_mappedreads.txt"),emit:mapped
 	path("${SampleName}_idxstats.txt"),emit:idxstats
 	tuple val(SampleName),path("${SampleName}_consensus.fasta"),emit:consensus
 	path("${SampleName}_consensus.fasta"),emit:(cons_only)

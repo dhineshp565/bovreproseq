@@ -38,9 +38,9 @@ sampleid <- samplelist[,c(1)]
 for (i in sampleid){
   cat("####", i, "\n")
   
-  results <- (paste(i,"_results.csv",sep=""))
-  results_df <- read.csv(results,header = TRUE,sep = ",")
-  colnames (results_df) <- c("SAMPLEID","PATHOGEN","RESULT","QC_STATUS") # column names
+  results <- (paste(i,"_bovreproseq_lims_report.tsv",sep=""))
+  results_df <- read.csv(results,header = TRUE,sep = "\t")
+  colnames (results_df) <- c("SAMPLEID","PATHOGEN","QC STATUS","READ COUNTS","RESULT") 
   #print (knitr::kable(results_df,align="llll",caption = "RESULTS SUMMARY - Based on abricate results")) 
   # Create a logical vector indicating where the "Positive" values are
   # Assuming results_df is your data frame and RESULT is the column containing "Positive"
@@ -50,7 +50,7 @@ for (i in sampleid){
 
 
   # Generate the table with kable
-  table_html <- knitr::kable(results_df, col.names = c("SAMPLEID","PATHOGEN","RESULT","QC STATUS"), align = "llll", caption = "RESULTS SUMMARY - Based on abricate results with custom Bovreproseq database. For more info: Seemann T, Abricate, Github https://github.com/tseemann/abricate") %>%
+  table_html <- knitr::kable(results_df, align = "llccl", caption = "RESULTS SUMMARY - Based on abricate results with custom Bovreproseq database. For more info: Seemann T, Abricate, Github https://github.com/tseemann/abricate") %>%
     kable_styling()
 
   # Apply row highlighting

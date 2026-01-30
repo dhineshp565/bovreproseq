@@ -9,7 +9,7 @@ process abricate{
 	path(dbdir)
 	
 	output:
-	path("${SampleName}_abricate.csv"),emit:abricate
+	tuple val(SampleName), path("${SampleName}_abricate.csv"),emit:abricate
 	script:
 	"""
 	abricate --datadir ${dbdir} --db Bovreproseq -minid 80  -mincov 85 --quiet ${consensus} 1> ${SampleName}_abricate.csv
