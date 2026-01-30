@@ -71,6 +71,9 @@ workflow {
 	mlst(AMPLICONS.out.consensus)
 	IGVREPORT(reference,AMPLICONS.out.bam)
 
+	lims_input=AMPLICONS.out.mapped.combine(abricate.out.abricate).map{mapped,sample,abricate -> tuple(sample,mapped,abricate)}
+	target_map=file("${baseDir}/Bovreproseq_pathogen_target_map.tsv")
+	bovreproseq_lims(lims_input,target_map)
 	METAGENOMICS (reads_for_alignment,params.kraken_db,params.blastdb_path,params.blastdb_name)
 	//generate report
 	rmd_file=file("${baseDir}/Bovreproseq_tabbed.Rmd")
