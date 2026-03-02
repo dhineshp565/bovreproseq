@@ -1,6 +1,6 @@
 PATHOGENS	PCR_TARGET1	PCR_TARGET2	
 BVDv-Type-1	BVDv_Npro	BVDv-1_5'UTR	
-BVDv-Type-2	BVDv_Npro	BVDv-1_5'UTR	
+BVDv-Type-2	BVDv_Npro	BVDv-2_5'UTR
 Bacillus_licheniformis	Bacillus_licheniformis_adk	Bacillus_licheniformis_gyrB	
 Bovine_herpesvirus_type-1	IBR-gBN	IBR-gE	
 BVDv	BVDv_Npro	BVDv-1_5'UTR	

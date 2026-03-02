@@ -18,6 +18,7 @@ include { abricate } from './modules/local/abricate.nf'
 include { mlst } from './modules/local/mlst.nf'
 include { client_report } from './modules/local/client_report.nf'
 include { bracken } from './modules/local/bracken.nf'
+include { interpret_results } from './modules/local/interpret_results.nf'
 include { bovreproseq_lims } from './modules/local/bovreproseq_lims'
 // Include dehost subworkflow
 include { DEHOST } from './subworkflows/dehost.nf'
@@ -62,7 +63,7 @@ workflow {
 	
 	// abricate 
 	dbdir=("${baseDir}/Bovreproseq_db")
-	targetlist=("${baseDir}/Bovreproseq_targetlist.txt")
+	//targetlist=("${baseDir}/Bovreproseq_targetlist.txt")
 	abricate(AMPLICONS.out.consensus,dbdir)
 	
 	//tax=("${baseDir}/taxdb")
@@ -73,13 +74,15 @@ workflow {
 
 	lims_input=AMPLICONS.out.mapped.join(abricate.out.abricate)
 	target_map=file("${baseDir}/Bovreproseq_pathogen_target_map.tsv")
-	bovreproseq_lims(lims_input,target_map)
+	version_file= ("${baseDir}/software_version.tsv")
+	interpret_results(lims_input,target_map)
+	bovreproseq_lims (version_file,interpret_results.out.collect())
 	METAGENOMICS (reads_for_alignment,params.kraken_db,params.blastdb_path,params.blastdb_name)
 	//generate report
 	rmd_file=file("${baseDir}/Bovreproseq_tabbed.Rmd")
 	meta_bracken=METAGENOMICS.out.bracken_output.map{ sample, file -> file }.collect()
 	meta_blast= METAGENOMICS.out.blast_best.map {sample, file -> file}.collect()
-	make_report(QCREADS.out.csv,METAGENOMICS.out.krona_output,AMPLICONS.out.mapped.map{sample, file -> file}.collect(),abricate.out.abricate.map{sample, file -> file}.collect(),bovreproseq_lims.out.collect(),rmd_file,mlst.out.collect(),AMPLICONS.out.cons_only.collect(),meta_bracken,meta_blast,IGVREPORT.out)
+	make_report(QCREADS.out.csv,METAGENOMICS.out.krona_output,AMPLICONS.out.mapped.map{sample, file -> file}.collect(),abricate.out.abricate.map{sample, file -> file}.collect(),interpret_results.out.collect(),rmd_file,mlst.out.collect(),AMPLICONS.out.cons_only.collect(),meta_bracken,meta_blast,IGVREPORT.out)
 	
 	//generate metagenomics report
 	rmd_meta_file=file("${baseDir}/ont_metagenomics.Rmd")

@@ -19,12 +19,12 @@ samtools idxstats "$1_unfilt.bam" > $1_unfilt_idxstats.csv
 #generate a  sorted bam file with primary alignments
 samtools view -b -h -F 0x900 -q $6 $2|samtools sort > $1.bam	
 samtools stats "$1.bam" > $1_stats.txt
+total_reads=$(samtools view -c $1_unfilt.bam)
 #index sorted bam file and generate read counts for each amplicon
 samtools index "$1.bam" > $1.bai
 samtools idxstats "$1.bam" > $1_idxstats.txt
 threshold=$4
-awk -v var="$threshold" '{if ($3 >= var) print $1, $2, $3}' "${1}_idxstats.txt" > "${1}_mappedreads.txt"
-
+awk -v threshold="$4" -v total="$total_reads" '{if($3>=threshold) print $1, $2, $3, sprintf("%.2f", ($3/total*100))}' "${1}_idxstats.txt" > "${1}_mappedreads.txt"
 mode=$5
 #conditional for empty mapped reads.txt file
 if [ $(wc -l < "$1_mappedreads.txt") -ne 0 ]
@@ -46,7 +46,7 @@ then
 			# generate stats for near full length reads
 			samtools index "$1_${len}_${amp}.bam" > $1_${len}_${amp}.bai
 			samtools idxstats "$1_${len}_${amp}.bam" > $1_${len}_${amp}_idxstats.txt
-			awk '{if ($3 >= 0) print $1,$2,$3}' "$1_${len}_${amp}_idxstats.txt" > $1_${amp}_mappedreads.txt
+		awk  -v total="$total_reads" '{if($3 > 0) print $1, $2, $3, sprintf("%.2f", ($3/total*100))}' "$1_${len}_${amp}_idxstats.txt" > $1_${amp}_mappedreads.txt
 			#trims primers from both ends of the amplicon using primer bed file
 			samtools ampliconclip --both-ends -b $3 "$1_${len}_${amp}.bam" > $1_trimmed_${len}_${amp}.bam
 			# generate consensus for full length reads
@@ -74,5 +74,6 @@ else
 		echo -e "NA NA NA" > "$1_full_length_mappedreads.txt"
 fi
 	# insert headers to mappedreads.txt
-sed -i "1i Amplicon_Name Size $1" "$1_mappedreads.txt"
-sed -i "1i Amplicon_Name Size $1" "$1_full_length_mappedreads.txt"
+
+sed -i "1i Amplicon_Name Size $1 Relative_Abundance" "$1_mappedreads.txt"
+sed -i "1i Amplicon_Name Size $1 Relative_Abundance" "$1_full_length_mappedreads.txt"

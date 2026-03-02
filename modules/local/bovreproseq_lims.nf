@@ -1,18 +1,24 @@
 #!/usr/bin/env nextflow
 
+
 process bovreproseq_lims {
-    publishDir "${params.out_dir}/bovreproseq_lims/", mode: "copy"
-    label "high"
+     publishDir "${params.out_dir}/bovreproseq_lims/", mode: "copy"
+    label "low"
 
     input:
-    tuple val(SampleName), path(mapped_reads),path(abricate_results)
-    path(pathogentargetmap)
+    path(software_version)
+    path(result_files)
 
     output:
-    path("${SampleName}_bovreproseq_lims_report.tsv")
+    path("bovreproseq_LIMSfile_*.tsv")
 
     script:
     """
-    interpret_results.py ${SampleName} ${pathogentargetmap} ${abricate_results} ${mapped_reads} ${SampleName}_bovreproseq_lims_report.tsv
+    date=\$(date '+%Y-%m-%d_%H-%M-%S')
+    
+    awk 'FNR==1 && NR!=1 { while (/^Sample/) getline; } 1 {print}' ${result_files} > bovreproseq_LIMSfile.tsv
+
+    cat ${software_version} "bovreproseq_LIMSfile.tsv" > bovreproseq_LIMSfile_\${date}.tsv
+    
     """
 }

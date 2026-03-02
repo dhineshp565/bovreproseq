@@ -38,9 +38,9 @@ sampleid <- samplelist[,c(1)]
 for (i in sampleid){
   cat("####", i, "\n")
   
-  results <- (paste(i,"_bovreproseq_lims_report.tsv",sep=""))
+  results <- (paste(i,"_bovreproseq_results.tsv",sep=""))
   results_df <- read.csv(results,header = TRUE,sep = "\t")
-  colnames (results_df) <- c("SAMPLEID","PATHOGEN","QC STATUS","READ COUNTS","RESULT") 
+  colnames (results_df) <- c("SAMPLEID","PATHOGEN","QC STATUS","READ COUNTS","ABUNDANCE(%)","RESULT") 
   #print (knitr::kable(results_df,align="llll",caption = "RESULTS SUMMARY - Based on abricate results")) 
   # Create a logical vector indicating where the "Positive" values are
   # Assuming results_df is your data frame and RESULT is the column containing "Positive"
@@ -50,7 +50,7 @@ for (i in sampleid){
 
 
   # Generate the table with kable
-  table_html <- knitr::kable(results_df, align = "llccl", caption = "RESULTS SUMMARY - Based on abricate results with custom Bovreproseq database. For more info: Seemann T, Abricate, Github https://github.com/tseemann/abricate") %>%
+  table_html <- knitr::kable(results_df, align = "lllccc", caption = "RESULTS SUMMARY - Based on abricate results with custom Bovreproseq database. For more info: Seemann T, Abricate, Github https://github.com/tseemann/abricate") %>%
     kable_styling()
 
   # Apply row highlighting
@@ -74,9 +74,9 @@ for (i in sampleid){
   #use mappedreads.txt and display column 1 (amplicon name) and 3 (no. of mapped reads)
   mapped_reads <- (paste(i,"_mappedreads.txt",sep="")) # filename
   df <- read.csv(mapped_reads,header = TRUE,sep=" ") # dataframe
-  mapped_stat<-df[,c(1,3)] # sliced dataframe
-  colnames (mapped_stat) <- c("AMPLICON","MAPPED_READS") # column names
-  print(knitr::kable(mapped_stat,align="ll",caption = "NO. OF MAPPED READS. Generated using minimap2 (Li, H. (2018).Bioinformatics, 34:3094-3100. https://doi.org/10.1093/bioinformatics/bty191) and samtools (https://doi.org/10.1093/gigascience/giab008)") %>%
+  mapped_stat<-df[,c(1,3,4)] # sliced dataframe
+  colnames (mapped_stat) <- c("AMPLICON","MAPPED READS","ABUNDANCE(%)") # column names
+  print(knitr::kable(mapped_stat,align="lcc",caption = "NO. OF MAPPED READS. Generated using minimap2 (Li, H. (2018).Bioinformatics, 34:3094-3100. https://doi.org/10.1093/bioinformatics/bty191) and samtools (https://doi.org/10.1093/gigascience/giab008)") %>%
     kable_styling()) # displat table
   
   cat('\n\n<!-- -->\n\n') 
