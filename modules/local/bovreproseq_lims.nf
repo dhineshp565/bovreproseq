@@ -18,6 +18,8 @@ process bovreproseq_lims {
     
     awk 'FNR==1 && NR!=1 { while (/^Sample/) getline; } 1 {print}' ${result_files} > bovreproseq_LIMSfile.tsv
 
+    sed -i 's/_/ /g' bovreproseq_LIMSfile.tsv
+
     cat ${software_version} "bovreproseq_LIMSfile.tsv" > bovreproseq_LIMSfile_\${date}.tsv
     
     """
