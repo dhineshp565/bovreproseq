@@ -46,7 +46,7 @@ then
 			# generate stats for near full length reads
 			samtools index "$1_${len}_${amp}.bam" > $1_${len}_${amp}.bai
 			samtools idxstats "$1_${len}_${amp}.bam" > $1_${len}_${amp}_idxstats.txt
-		awk  -v total="$total_reads" '{if($3 > 0) print $1, $2, $3, sprintf("%.2f", ($3/total*100))}' "$1_${len}_${amp}_idxstats.txt" > $1_${amp}_mappedreads.txt
+			awk  -v total="$total_reads" '{if($3 > 0) print $1, $2, $3, sprintf("%.2f", ($3/total*100))}' "$1_${len}_${amp}_idxstats.txt" > $1_${amp}_mappedreads.txt
 			#trims primers from both ends of the amplicon using primer bed file
 			samtools ampliconclip --both-ends -b $3 "$1_${len}_${amp}.bam" > $1_trimmed_${len}_${amp}.bam
 			# generate consensus for full length reads
@@ -70,8 +70,8 @@ then
 # handle empty consensus. when there are no mapped reads.add sequence header
 else
 		echo -e ">$1 No consensus" > $1_consensus.fasta
-		echo -e "NA NA NA" > "$1_mappedreads.txt"
-		echo -e "NA NA NA" > "$1_full_length_mappedreads.txt"
+		echo -e "IC-EGFP 0 0" > "$1_mappedreads.txt"
+		echo -e "IC-EGFP 0 0" > "$1_full_length_mappedreads.txt"
 fi
 	# insert headers to mappedreads.txt
 
