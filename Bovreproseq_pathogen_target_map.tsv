@@ -1,25 +1,25 @@
-PATHOGENS	PCR_TARGET1	PCR_TARGET2	
-BVDv-Type-1	BVDv_Npro	BVDv-1_5'UTR	
-BVDv-Type-2	BVDv_Npro	BVDv-2_5'UTR
-Bacillus_licheniformis	Bacillus_licheniformis_adk	Bacillus_licheniformis_gyrB	
-Bovine_herpesvirus_type-1	IBR-gBN	IBR-gE	
-BVDv	BVDv_Npro	BVDv-1_5'UTR	
-Campylobacter_fetus	CFF_nahE	NA	
-Campylobacter_fetus_subsp._venerealis	CFF_nahE	CFV_parA	
-Campylobacter_jejuni_subsp._jejuni	Campylobacterjejuni_cj0414	Campylobacterjejuni_hipO	
-Chlamydia_abortus	Chlamydia_Spp_omp2	Chlamydiaabortus-Helicasegene	
-Coxiella_burnetii	Coxiella_burnetti_COM1	Coxiella_burnetti_Trans-1	
-Internal_amplification_control	IC-EGFP	NA	
-Leptospira_borgpetersenii_serovar._Hardjo	Leptospira_LipL32	Leptospira_16SrRNA	
-Leptospira_interrogans_serovar._Copenhageni	Leptospira_LipL32	Leptospira_16SrRNA	
-Leptospira_kirschneri	Leptospira_LipL32	Leptospira_16SrRNA	
-Listeria_monocytogenes	Listeria_mono_hlyA	Listeria_mono-LM1	
-Mycoplasma_bovis	Mbovis_PpSM5	Mbovis_uvrC	
-Neospora_caninum	Coccidia_Spp.	Sarcocystis_spp	
-Sarcocystis_bovini	Coccidia_Spp.	Sarcocystis_spp	
-Sarcocystis_cruzi	Coccidia_Spp.	Coccidia_Sarcocystiscruzi	
-Sarcocystis_hirsuta	Coccidia_Spp.	Sarcocystis_spp	
-Toxoplasma_gondii	Coccidia_Spp.	Toxoplasma_gondii_P30	
-Tritrichomonas_foetus	Tritrichomonasfetus_18SrRNA	NA	
-Trueperella_pyogenes	Trueperella_pyogenes_plo	Trueperella_pyogenes_sodA	
-Ureaplasma_diversum	Ureaplasmadiversum-16SrRNA	Ureaplasmaspp_UGP	
+PATHOGENS	PCR_TARGET1	PCR_TARGET2	PCR_TARGET3	PCR_TARGET4	PCR_TARGET5	PCR_TARGET6	PCR_TARGET7	PCR_TARGET8	PCR_TARGET9	LIMS
+BVDv-Type-1	BVDv_Npro	BVDv-1_5'UTR	NA	NA	NA	NA	NA	NA	NA	Bovine viral diarrhea virus
+BVDv-Type-2	BVDv_Npro	BVDv-2_5'UTR	NA	NA	NA	NA	NA	NA	NA	Bovine viral diarrhea virus
+Bacillus_licheniformis	Bacillus_licheniformis_adk	Bacillus_licheniformis_gyrB	NA	NA	NA	NA	NA	NA	NA	Bacillus licheniformis
+Bovine_herpesvirus_type-1	IBR-gBN	IBR-gE	NA	NA	NA	NA	NA	NA	NA	Bovine herpesvirus 1
+Campylobacter_fetus	CFF_nahE	NA	CampylobacterfetusMLST-aspA	CampylobacterfetusMLST-glnA	CampylobacterfetusMLST-gltA	CampylobacterfetusMLST-glyA	CampylobacterfetusMLST-tkt	CampylobacterfetusMLST-uncA	CampylobacterfetusMLST-pgm	Campylobacter fetus ssp. fetus
+Campylobacter_fetus_subsp._venerealis	CFF_nahE	CFV_parA	CampylobacterfetusMLST-aspA	CampylobacterfetusMLST-glnA	CampylobacterfetusMLST-gltA	CampylobacterfetusMLST-glyA	CampylobacterfetusMLST-tkt	CampylobacterfetusMLST-uncA	CampylobacterfetusMLST-pgm	Campylobacter fetus ssp. venerealis
+Campylobacter_jejuni_subsp._jejuni	Campylobacterjejuni_cj0414	Campylobacterjejuni_hipO	NA	NA	NA	NA	NA	NA	NA	Campylobacter jejuni
+Chlamydia_abortus	Chlamydia_Spp_omp2	Chlamydiaabortus-Helicasegene	NA	NA	NA	NA	NA	NA	NA	Chlamydophila abortus
+Coxiella_burnetii	Coxiella_burnetti_COM1	Coxiella_burnetti_Trans-1	NA	NA	NA	NA	NA	NA	NA	Coxiella burnetti
+Internal_amplification_control	IC-EGFP	NA	NA	NA	NA	NA	NA	NA	NA	Internal amplification control
+Leptospira_borgpetersenii_serovar._Hardjo	Leptospira_LipL32	Leptospira_16SrRNA	NA	NA	NA	NA	NA	NA	NA	Leptospira species
+Leptospira_interrogans_serovar._Copenhageni	Leptospira_LipL32	Leptospira_16SrRNA	NA	NA	NA	NA	NA	NA	NA	Leptospira species
+Leptospira_kirschneri	Leptospira_LipL32	Leptospira_16SrRNA	NA	NA	NA	NA	NA	NA	NA	Leptospira species
+Listeria_monocytogenes	Listeria_mono_hlyA	Listeria_mono-LM1	NA	NA	NA	NA	NA	NA	NA	Listeria monocytogenes
+Mycoplasma_bovis	Mbovis_PpSM5	Mbovis_uvrC	NA	NA	NA	NA	NA	NA	NA	Mycoplasma bovis
+Neospora_caninum	Coccidia_Spp.	Sarcocystis_spp	NA	NA	NA	NA	NA	NA	NA	Neospora caninum
+Sarcocystis_bovini	Coccidia_Spp.	Sarcocystis_spp	NA	NA	NA	NA	NA	NA	NA	Sarcocystis species
+Sarcocystis_cruzi	Coccidia_Spp.	Sarcocystis_spp	NA	NA	NA	NA	NA	NA	NA	Sarcocystis species
+Sarcocystis_hirsuta	Coccidia_Spp.	Sarcocystis_spp	NA	NA	NA	NA	NA	NA	NA	Sarcocystis species
+Sarcocystis _capracanis	Coccidia_Spp.	Sarcocystis_spp	NA	NA	NA	NA	NA	NA	NA	Sarcocystis species
+Toxoplasma_gondii	Coccidia_Spp.	Toxoplasma_gondii_P30	NA	NA	NA	NA	NA	NA	NA	Toxoplasma gondii
+Tritrichomonas_foetus	Tritrichomonasfetus_18SrRNA	NA	NA	NA	NA	NA	NA	NA	NA	Tritrichomonas foetus
+Trueperella_pyogenes	Trueperella_pyogenes_plo	Trueperella_pyogenes_sodA	NA	NA	NA	NA	NA	NA	NA	Trueperella pyogenes
+Ureaplasma_diversum	Ureaplasmadiversum-16SrRNA	Ureaplasmaspp_UGP	NA	NA	NA	NA	NA	NA	NA	Ureaplasma diversum

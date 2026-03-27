@@ -5,11 +5,12 @@ Script to interpret pathogen detection results.
 
 This script processes outputs from Abricate and mapping results from samtools to determine
 the presence or absence of pathogens in a given sample. It generates a summary
-CSV report including QC status, read counts and abundance for each pathogen.
+TSV report including QC status, read counts and abundance for each pathogen.
 """
 
 import csv
 import sys
+
 
 def interpret_results(samplename, pathogen_target_map, abricate_file, mappedreads_file, output_file):
     """
@@ -17,83 +18,100 @@ def interpret_results(samplename, pathogen_target_map, abricate_file, mappedread
 
     Args:
         samplename (str): Name of the sample being processed.
-        pathogen_target_map (str): Path to TSV file mapping pathogens to their target markers.
+        pathogen_target_map (str): Path to TSV file mapping pathogens to their PCR target markers.
         abricate_file (str): Path to Abricate output file (tab-delimited).
-        mappedreads_file (str): Path to file containing mapped read counts.
-        output_file (str): Path where the output CSV will be written.
+        mappedreads_file (str): Path to file containing mapped read counts (space-delimited).
+        output_file (str): Path where the output TSV will be written.
     """
-    # map pathogens to pcr targets by creating dictionary with pathogen name as key and targets as values
+    # ---- SECTION 1: Read pathogen target map ----
+    # Build mappings: pathogen -> PCR targets, pathogen -> LIMS display name,
+    # and identify LIMS names shared by multiple pathogens (e.g. "Leptospira species")
     with open(pathogen_target_map, 'r') as pathogen_map_file:
-        next(pathogen_map_file)  # Skip header line
-        pathogen_dict = {}
+        next(pathogen_map_file)
+        pathogen_dict = {}           # {pathogen_name: [PCR targets]}
+        lims_pathogen_dict = {}      # {pathogen_name: LIMS display name}
+        monospp_lims_names = set()
+        multispp_lims_names = set()  # LIMS names shared by multiple pathogens
         for line in pathogen_map_file:
             line = line.strip().split('\t')
             pathogen = line[0]
-            targets = line[1:]
-            pathogen_dict[pathogen] = targets
-        
-   # creates a list of pathogens in the panel by looking at the resistance column of the abricate file
+            pcr_targets = []
+            for t in line[1:-1]:
+                if t != 'NA':
+                    pcr_targets.append(t)
+            pathogen_dict[pathogen] = pcr_targets
+            lims_name = line[-1]
+            lims_pathogen_dict[pathogen] = lims_name
+            if lims_name in monospp_lims_names:
+                multispp_lims_names.add(lims_name)
+            else:
+                monospp_lims_names.add(lims_name)
+
+    # ---- SECTION 2: Read abricate results ----
+    # Collect unique pathogens detected via the RESISTANCE column
     with open(abricate_file, 'r') as abricate_f:
         reader = csv.DictReader(abricate_f, delimiter='\t')
         pathogens_in_sample = []
         for col in reader:
-            # Use the 'RESISTANCE' column as the marker for detected
-            # elements. Duplicates are skipped so we only have a unique list.
             if col['RESISTANCE'] not in pathogens_in_sample:
                 pathogens_in_sample.append(col['RESISTANCE'])
-        print(f"Pathogens in sample: {pathogens_in_sample}")
 
-   # Converts the mapped reads file into a dictionary with targets as key and the read counts as values
-    # New format includes: Amplicon_Name Size ReadCount Relative_Abundance
+    # ---- SECTION 3: Read mapped reads ----
+    # Format: Amplicon_Name Size ReadCount Relative_Abundance (space-delimited)
     with open(mappedreads_file, 'r') as mappedreads_f:
-        next(mappedreads_f)  # Skip header line
-        read_counts = {}  # Store {target: (count, abundance)}
+        next(mappedreads_f)
+        read_counts = {}  # {pcr_target: (count, abundance)}
         for line in mappedreads_f:
             line = line.strip().split(' ')
-            # line[0] is target name, line[2] is read count, line[3] is relative abundance
-            if len(line) > 3:
-                # Store both count and relative abundance as a tuple
-                read_counts[line[0]] = (int(line[2]), float(line[3]))
-        print(f"Read counts: {read_counts}")
+            read_counts[line[0]] = (int(line[2]), float(line[3]))
 
-    # Check for PCR inhibition
-    # If Abricate did not report any of the pathogens that we have targets
-    # for (i.e. none of the pathogens in the sample appear in the mapping),
-    # flag the sample to 'Check for PCR inhibition'. Otherwise QC is OK.
-    detected_map_pathogens = [p for p in pathogens_in_sample if p in pathogen_dict]
-    if not detected_map_pathogens:
-        global_qc_status = "Check for PCR inhibition"
-    else:
+        # If CFV_parA is present, remove generic C. fetus so subspecies are reported separately
+        if 'CFV_parA' in read_counts:
+            pathogens_in_sample.remove('Campylobacter_fetus')
+
+    # ---- SECTION 4: Check for PCR inhibition ----
+    # Flag if no abricate pathogens matched the target map (including internal control)
+    detected_map_pathogens = []
+    for p in pathogens_in_sample:
+        if p in pathogen_dict:
+            detected_map_pathogens.append(p)
+
+    if detected_map_pathogens:
         global_qc_status = "OK"
+    else:
+        global_qc_status = "Check for PCR inhibition"
 
-    # Write output to CSV file
+    # ---- SECTION 5: Write output file ----
     with open(output_file, 'w') as results_file:
-        # Write header for output CSV-like TSV that downstream tools expect
-        results_file.write('Sample\tPathogen\tQC_Status\tReadCount\tAbundance(%)\tResult\n')
-        total_reads = {}
-        
+        results_file.write('Sample\tPathogen\tQC_Status\tReadCount\tAbundance(%)\tResult\tComment\n')
+
+        lims_results = {}  # One output line per LIMS name; Positive overwrites Negative
         for pathogen, targets in pathogen_dict.items():
+            lims_pathogen_name = lims_pathogen_dict.get(pathogen, pathogen)
             if pathogen in pathogens_in_sample:
-                # Calculate total reads for the two targets of the pathogen
-                PCR_target1 = pathogen_dict[pathogen][0]
-                PCR_target2 = pathogen_dict[pathogen][1]
+                total_count = 0
+                total_abundance = 0
+                for target in targets:
+                    count, abund = read_counts.get(target, (0, 0))
+                    total_count += count
+                    total_abundance += abund
 
-                # Lookup read counts and abundance; defaulting to 0 if a target wasn't found
-                # read_counts values are tuples of (count, abundance)
-                count1, abund1 = read_counts.get(PCR_target1, (0, 0))
-                count2, abund2 = read_counts.get(PCR_target2, (0, 0))
-                # adding the counts and abundace for each amplicon
-                total_count = count1 + count2
-                total_abundance = abund1 + abund2
-
-                total_reads[pathogen] = total_count
-                results_file.write(f'{samplename}\t{pathogen}\t{global_qc_status}\t{total_count}\t{total_abundance}\tPositive\n')
+                # When multiple pathogens share a LIMS name, add the specific name as a comment
+                if lims_pathogen_name in multispp_lims_names:
+                    comment = pathogen
+                else:
+                    comment = ''
+                output_line = f'{samplename}\t{lims_pathogen_name}\t{global_qc_status}\t{total_count}\t{total_abundance}\tPositive\t{comment}\n'
+                lims_results[lims_pathogen_name] = output_line
             else:
-                # Pathogen not found by Abricate; report as Negative with 0 reads
-                total_reads[pathogen] = 0
-                results_file.write(f'{samplename}\t{pathogen}\t{global_qc_status}\t0\t0\tNegative\n')
-        
-    
+                output_line = f'{samplename}\t{lims_pathogen_name}\t{global_qc_status}\t0\t0\tNegative\t\n'
+                if lims_pathogen_name not in lims_results:
+                    lims_results[lims_pathogen_name] = output_line
+
+        for output_line in lims_results.values():
+            results_file.write(output_line)
+
+
 if __name__ == "__main__":
     if len(sys.argv) < 6:
         print("Usage: python interpret_results.py <samplename> <pathogen_target_map> <abricate_file> <mappedreads_file> <output_file>")
