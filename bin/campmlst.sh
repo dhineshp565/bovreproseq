@@ -6,10 +6,10 @@
 # Campylbacter fetus venerealis typing
 ST="$(tail -n +2 $1 | cut -f 3)"
 if [[  $ST =~ ^(4|7|12) ]];then
-	subspecies="Campylobacter fetus. venerealis" 
+	subspecies="Campylobacter fetus subsp. venerealis" 
 # Campylbacter fetus fetus typing	
 elif [[ $ST =~ ^(1|2|3|5|6|8|9|10|11|13|14)$ ]];then
-	subspecies="Campylobacter fetus. fetus"
+	subspecies="Campylobacter fetus subsp. fetus"
 # handle No ST typing		
 else 
 	subspecies="NA"		
