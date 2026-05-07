@@ -2,15 +2,18 @@
 
 
 process bovreproseq_lims {
-     publishDir "${params.out_dir}/bovreproseq_lims/", mode: "copy"
+    publishDir "${params.out_dir}/bovreproseq_lims/", mode: "copy"
     label "low"
 
     input:
     path(software_version)
     path(result_files)
+    path(metagenomics_summary)
+    
 
     output:
     path("bovreproseq_LIMSfile_*.tsv")
+    path("metagenomics_LIMSfile_*.tsv")
 
     script:
     """
@@ -21,6 +24,12 @@ process bovreproseq_lims {
     sed -i 's/_/ /g' bovreproseq_LIMSfile.tsv
 
     cat ${software_version} "bovreproseq_LIMSfile.tsv" > bovreproseq_LIMSfile_\${date}.tsv
+
+    awk 'FNR==1 && NR!=1 { while (/^SampleID/) getline; } 1 {print}' ${metagenomics_summary} > metagenomics_LIMSfile.tsv
+
+    sed -i 's/_/ /g' metagenomics_LIMSfile.tsv
+
+    cat ${software_version} "metagenomics_LIMSfile.tsv" > metagenomics_LIMSfile_\${date}.tsv 
     
     """
 }

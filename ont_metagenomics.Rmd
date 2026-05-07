@@ -8,6 +8,9 @@ output:
 params:
   csv: ""
   krona: ""
+  meta_summary: ""
+  blast_hits: ""
+  
 ---
 
 ```{r setup, include=FALSE}
@@ -39,74 +42,47 @@ for (i in sampleid){
   
   # display bracken results
   
-  bracken_id <- (paste(i,"_bracken.tsv",sep=""))
-  bracken_raw <- read.csv(bracken_id,header = TRUE,sep = "\t")
-  bracken_final <- bracken_raw[,c(1,2,6,7)]
-  colnames(bracken_final) <- c("Organsim","Taxid","Total reads", "Relative abundance (%)")
-  bracken_final[,4] <- paste0((bracken_final[,4] * 100), "%")
-  print(knitr::kable(bracken_final,align = "lccc",caption = "Bracken Species Abundance Table.Generated using kraken2 (kraken2 (https://ccb.jhu.edu/software/kraken2/) and Bracken (https://doi.org/10.7717/peerj-cs.104)") 
-  %>%
-    kable_styling())
+  summary_id <- (paste(i,"_kracken_blast_summary.tsv",sep=""))
+  summary_raw <- read.csv(summary_id,header = TRUE,sep = "\t")
+  summary_final <- summary_raw[,c(2,3,4,5)]
+  colnames(summary_final) <- c("kraken2-Genus_level","Read_Count","Abundance (%)","BLAST_hits_Species")
+  
+  print(
+    knitr::kable(
+      summary_final,
+      align = "lccl",
+      caption = "kraken2 and BLAST results summary ([kraken2](https://ccb.jhu.edu/software/kraken2/) and [BLAST+](https://doi.org/10.1186/1471-2105-10-421))"
+    ) %>%
+      kable_styling()
+  )
 
   cat('\n\n<!-- -->\n\n')
 
-  # --------------------------------------------------------------------------
-  # Process BLAST Results
-  # --------------------------------------------------------------------------
+ 
   
   # Construct filename for the best BLAST hits report
-  blast_ids <- (paste(i,"_report_blast_best.tsv",sep=""))
+  blast_ids <- (paste(i,"_blast_best_hits.tsv",sep=""))
   
   # Read the tab-separated BLAST report
   blast_raw <- read.csv(blast_ids,header = TRUE,sep = "\t")
   
   # Select relevant columns: Query ID, Length, Coverage, Identity, E-value, Subject TaxIDs, Title
-  blast_final <- blast_raw[,c(1,3,4,5,6,7,10)]
-  colnames(blast_final) <- c("QUERY_ID","LENGTH","%COVERAGE","%IDENTITY","E_VAL","TAXIDS","STITLE")
+  blast_final <- blast_raw[,c(1,3,4,5,6,11)]
+  colnames(blast_final) <- c("QUERY_ID","LENGTH","%COVERAGE","%IDENTITY","E_VAL","STITLE")
+  print(
+    knitr::kable(
+      blast_final,
+      align = "lccccl",
+      caption = "Best BLAST hits. Generated using [BLAST+](https://doi.org/10.1186/1471-2105-10-421)"
+    ) %>%
+      kable_styling(full_width = F)
+  )
 
-  # Convert numerical columns to numeric type
-  # use suppressWarnings to silence "NAs introduced by coercion" when 'none' values are converted to NA
-  suppressWarnings({
-    blast_final$`E_VAL` <- as.numeric(as.character(blast_final$`E_VAL`))
-    blast_final$`%IDENTITY` <- as.numeric(as.character(blast_final$`%IDENTITY`))
-    blast_final$`%COVERAGE` <- as.numeric(as.character(blast_final$`%COVERAGE`))
-  })
-
-  # Filter BLAST results based on quality thresholds:
-  # 1. remove rows where E_VAL is NA (failed conversion from 'none')
-  # 2. Strict E-value cutoff (< 1e-25)
-  # 3. High Identity (> 90%)
-  # 4. Moderate Coverage (> 50%)
-  # Then sort by Importance: E-value (asc) -> Identity (desc) -> Coverage (desc)
-  blast_final <- blast_final %>%
-  filter(!is.na(E_VAL) & E_VAL < 1e-25 & `%IDENTITY` > 90 & `%COVERAGE` > 50) %>%
-  arrange(`E_VAL`, desc(`%IDENTITY`), desc(`%COVERAGE`))
-  
-  # --------------------------------------------------------------------------
-  # Generate Organism-Specific Tables
-  # --------------------------------------------------------------------------
-  
-  # Iterate through each TaxID identified by Bracken to create specific BLAST tables
-  for(row in 1:nrow(bracken_final)) {
-      tid <- bracken_final[row, "Taxid"]
-      org_name <- bracken_final[row, "Organsim"]
-      
-      # Filter BLAST hits for the current organism
-      # Matches query IDs containing the specific TaxID (format: ..._taxid_...)
-      blast_subset <- blast_final[grep(paste0("_", tid, "_"), blast_final$QUERY_ID), ]
-      
-      # Only display a table if there are valid hits passing filters
-      if (nrow(blast_subset) > 0) {
-          cat(paste0("<h5 style='color: darkblue; font-weight: bold;'>", org_name, " (TaxID: ", tid, ")</h5>\n"))
-          print(knitr::kable(blast_subset, align = "lccccl", row.names = FALSE, 
-              caption = paste0("Consensus BLAST hits for ", org_name, ". Generated using [BLAST](https://blast.ncbi.nlm.nih.gov/Blast.cgi)")) %>%
-            kable_styling(full_width = F))
-          cat('\n\n<!-- -->\n\n')
-      }
-  } 
-  
   cat('\n\n<!-- -->\n\n')
-} 
+}
+  
+  
+cat('\n\n<!-- -->\n\n')
 ```
 <br>
 
@@ -117,10 +93,14 @@ for (i in sampleid){
 
 ```{r, echo=FALSE}
 library("htmltools")
-htmltools::tags$iframe(
-  src = base64enc::dataURI(file= params$krona, mime="text/html; charset=UTF-8"),
-  style="border:10; position:relative; top:0; left:; right::; bottom:; width:100%; height:800px"
-)
+if (!is.null(params$krona) && nzchar(params$krona) && file.exists(params$krona)) {
+  htmltools::tags$iframe(
+    src = base64enc::dataURI(file = params$krona, mime = "text/html; charset=UTF-8"),
+    style = "border:10; position:relative; top:0; left:; right::; bottom:; width:100%; height:800px"
+  )
+} else {
+  htmltools::tags$p("Krona report is not available for this run.")
+}
 ```
 <br>
 

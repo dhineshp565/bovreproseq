@@ -14,7 +14,7 @@ workflow QCREADS {
         qscore // Minimum qscore for filtering
         trim_barcodes // Boolean to trim barcodes
     main:
-        data = Channel.fromPath(fastq_path)
+        data = channel.fromPath(fastq_path)
         
         make_csv(data)
         

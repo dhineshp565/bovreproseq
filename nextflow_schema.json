@@ -33,6 +33,13 @@
                     "description": "Path to kraken2 database",
                     "default": "/data/referenceDB/kraken/k2_pluspf_08gb_20230605"
                 },
+                "kraken_confidence": {
+                    "type": "number",
+                    "default": 0.01,
+                    "description": "Confidence threshold for kraken2 classification (between 0 and 1)",
+                    "minimum": 0.00,
+                    "maximum": 1.00
+                },
                  "blastdb_path": {
                     "type": "string",
                     "default": "/data/referenceDB/blast/microbe_db",
@@ -70,7 +77,7 @@
                   "type": "integer",
                   "default": 20,
                   "description": "Raw read quality score (Phred quality score). Only the reads equal to or above quality score will be used for analysis",
-                  "enum": [10, 12, 15, 20, 25,30,35,40]
+                  "enum": [9,10, 12, 15, 20, 25,30,35,40]
                 },
                 "consensus_mode": {
                   "type": "string",

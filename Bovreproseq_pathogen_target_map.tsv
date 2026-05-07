@@ -14,7 +14,7 @@ Leptospira_interrogans_serovar._Copenhageni	Leptospira_LipL32	Leptospira_16SrRNA
 Leptospira_kirschneri	Leptospira_LipL32	Leptospira_16SrRNA	NA	NA	NA	NA	NA	NA	NA	Leptospira species
 Listeria_monocytogenes	Listeria_mono_hlyA	Listeria_mono-LM1	NA	NA	NA	NA	NA	NA	NA	Listeria monocytogenes
 Mycoplasma_bovis	Mbovis_PpSM5	Mbovis_uvrC	NA	NA	NA	NA	NA	NA	NA	Mycoplasma bovis
-Neospora_caninum	Coccidia_Spp.	Sarcocystis_spp	NA	NA	NA	NA	NA	NA	NA	Neospora caninum
+Neospora_caninum	Coccidia_Spp.	Neospora_caninum_pNC-5gene	NA	NA	NA	NA	NA	NA	NA	Neospora caninum
 Sarcocystis_bovini	Coccidia_Spp.	Sarcocystis_spp	NA	NA	NA	NA	NA	NA	NA	Sarcocystis species
 Sarcocystis_cruzi	Coccidia_Spp.	Sarcocystis_spp	NA	NA	NA	NA	NA	NA	NA	Sarcocystis species
 Sarcocystis_hirsuta	Coccidia_Spp.	Sarcocystis_spp	NA	NA	NA	NA	NA	NA	NA	Sarcocystis species

@@ -2,9 +2,58 @@
 nextflow.enable.dsl=2
 
 include { kraken2 } from '../modules/local/kraken2.nf'
-include { bracken } from '../modules/local/bracken.nf'
 include { krona_kraken } from '../modules/local/krona_kraken.nf'
-include { medaka } from '../modules/local/medaka.nf'
+
+process bracken {
+publishDir "${params.out_dir}/bracken/",mode:"copy"
+label "low"
+
+input:
+tuple val(SampleName), path(kraken_output),path(kraken_report)
+path(kraken_db)
+
+output:
+tuple val(SampleName), path("${SampleName}_bracken.tsv")
+
+script:
+"""
+
+
+# 1. Run Bracken
+bracken -d ${kraken_db} -i ${kraken_report} -o bracken_raw.tsv -l G
+
+if [[ ! -s bracken_raw.tsv ]]; then
+    echo -e "name\\ttaxonomy_id\\ttaxonomy_lvl\\tkraken_assigned_reads\\tadded_reads\\tnew_est_reads\\tfraction_total_reads\\nNo microbial reads\\t0\\t\$BRACKEN_LEVEL\\t0\\t0\\t0\\t0.00" > bracken_raw.tsv
+fi
+
+# 2. Sort by relative abundance (column 7) and keep header
+head -n 1 bracken_raw.tsv > ${SampleName}_bracken.tsv
+tail -n +2 bracken_raw.tsv | sort -t\$'\t' -k7,7nr >> ${SampleName}_bracken.tsv
+"""
+}
+
+
+process krakenuniq {
+
+
+    publishDir "${params.out_dir}/krakenuniq/",mode:"copy"
+	label "high"
+	input:
+	tuple val(SampleName),path (SamplePath)
+	path(db_path)
+    
+	
+	output:
+	tuple val(SampleName), path("${SampleName}_krakenuniq.csv"), emit: krakenuniq_output
+    tuple val(SampleName), path("${SampleName}_krakenuniq_report.csv"), emit: krakenuniq_report
+	
+	
+	script:
+	"""
+	krakenuniq --db $db_path --threads 50 --preload-size 200G --report-file ${SampleName}_krakenuniq_report.tsv --output ${SampleName}_krakenuniq.tsv ${SamplePath}
+	
+	"""
+}
 
 
 process extract_reads {
@@ -97,7 +146,6 @@ process refseq_masher {
 //performs blast of the consensus sequences
 process blast_cons {
 	publishDir "${params.out_dir}/blast/",mode:"copy"
-	containerOptions "-v ${params.blastdb_path}:${params.blastdb_path}"
 
 	label "high"
 	input:
@@ -106,22 +154,39 @@ process blast_cons {
 	val(blastdb_name)
 
 	output:
-	tuple val(SampleName), path("${SampleName}_report_blast.tsv"), emit: blast_report
-	tuple val(SampleName), path("${SampleName}_blast.tsv"), emit: blast_raw
-	tuple val(SampleName), path ("${SampleName}_report_blast_best.tsv"),emit: blast_best
+	tuple val(SampleName), path ("${SampleName}_blast.tsv"),emit:blast
 	script:
 	"""
-	
+	# Write header first
+	echo -e "queryid\tsubject_id\talignment length\tquery_coverage\t%identity\tevalue\tbitscore\tstaxids\tsscinames\tscomnames\tstitle" > "${SampleName}_blast.tsv"
 
-	# Run BLAST
-	blastn -task megablast -perc_identity 95 -db ${blastdb_path}/${blastdb_name} -query ${consensus} -out ${SampleName}_blast.tsv -outfmt "7 qseqid sseqid length qcovs pident evalue staxids ssciname scomnames stitle" -max_target_seqs 5
+	# Run BLAST and append results directly to report
+	blastn -task megablast -db ${blastdb_path}/${blastdb_name} -query ${consensus} -outfmt "6 qseqid sseqid length qcovs pident evalue bitscore staxids ssciname scomnames stitle" -max_target_seqs 5 >> "${SampleName}_blast.tsv" || true
 
-	# Build report files from BLAST output
-	make_blast_report.sh "${SampleName}"
-
-    """
+	# If only header was written (no BLAST hits), add a "none" placeholder row
+	if [[ \$(wc -l < "${SampleName}_blast.tsv") -le 1 ]]; then
+	    echo -e "none\tnone\tnone\tnone\tnone\tnone\tnone\tnone\tnone\tnone\tnone" >> "${SampleName}_blast.tsv"
+	fi
+	"""
 
 }
+
+process metagenomics_summary {
+    publishDir "${params.out_dir}/merged_kraken_blast/", mode: "copy"
+    label "high"
+
+    input:
+    tuple val(SampleName),path(bracken),path(blast_report)
+
+    output:
+    tuple val(SampleName), path("${SampleName}_blast_best_hits.tsv"), path("${SampleName}_kracken_blast_summary.tsv")
+
+    script:
+    """
+    metagenomics_summary.py ${bracken} ${blast_report} ${SampleName}
+    """
+}
+
 
 workflow METAGENOMICS {
     take:
@@ -129,10 +194,10 @@ workflow METAGENOMICS {
 	kraken_db  // Path: kraken database
     blastdb_path // Path to blast database
     blastdb_name // Name of blast database
-	
+	kraken_confidence // Confidence threshold for kraken2
 	main:
 	// Run kraken2
-	kraken2(reads, kraken_db)
+	kraken2(reads, kraken_db, kraken_confidence)
 	
 	// Prepare bracken input by joining kraken outputs
 	bracken_input = kraken2.out.kraken_output
@@ -155,19 +220,21 @@ workflow METAGENOMICS {
 	megahit(extract_reads.out)
     //medaka_input = reads.join(megahit.out).map{sample,fastq,draft_fasta -> tuple (sample,fastq,draft_fasta)}
    // medaka(medaka_input)
-    krona_kraken(kraken2.out.kraken_report.map{ sample, file -> file }.collect())
+    krona_kraken(kraken2.out.kraken_report.map{ _sample, file -> file }.collect())
     //refseq_masher(megahit.out)
     blast_cons(megahit.out,blastdb_path,blastdb_name)
+    summary_input = bracken.out.join(blast_cons.out).map{ sample, brackentsv, blastReport -> tuple(sample, brackentsv, blastReport) }
+    metagenomics_summary(summary_input)
 	
 	emit:
-	metagenomes = megahit.out.map{sample,consensus -> consensus}
+	metagenomes = megahit.out.map{_sample,consensus -> consensus}
 	kraken_output = kraken2.out.kraken_output
 	kraken_report = kraken2.out.kraken_report
 	bracken_output = bracken.out
     krona_output = krona_kraken.out
     //refmash=refseq_masher.out
-    blast_report = blast_cons.out.blast_report
-    blast_raw = blast_cons.out.blast_raw
-    blast_best=blast_cons.out.blast_best
+    blast_report = blast_cons.out.blast
+    merged_report = metagenomics_summary.out
+
 	
 }

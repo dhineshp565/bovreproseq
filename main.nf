@@ -10,14 +10,14 @@ include { porechop } from './modules/local/porechop.nf'
 //include { splitbam } from './modules/local/splitbam.nf'
 //include { medaka } from './modules/local/medaka.nf'
 include { multiqc } from './modules/local/multiqc.nf'
-include { kraken2 } from './modules/local/kraken2.nf'
-include { krona_kraken } from './modules/local/krona_kraken.nf'
+//include { kraken2 } from './modules/local/kraken2.nf'
+//include { krona_kraken } from './modules/local/krona_kraken.nf'
 include { make_report } from './modules/local/make_report.nf'
 include { make_metagenomics_report } from './modules/local/make_metagenomics_report.nf'
 include { abricate } from './modules/local/abricate.nf'
 include { mlst } from './modules/local/mlst.nf'
 include { client_report } from './modules/local/client_report.nf'
-include { bracken } from './modules/local/bracken.nf'
+//include { bracken } from './modules/local/bracken.nf'
 include { interpret_results } from './modules/local/interpret_results.nf'
 include { bovreproseq_lims } from './modules/local/bovreproseq_lims'
 // Include dehost subworkflow
@@ -76,17 +76,20 @@ workflow {
 	target_map=file("${baseDir}/Bovreproseq_pathogen_target_map.tsv")
 	version_file= ("${baseDir}/software_version.tsv")
 	interpret_results(lims_input,target_map)
-	bovreproseq_lims (version_file,interpret_results.out.collect())
-	METAGENOMICS (reads_for_alignment,params.kraken_db,params.blastdb_path,params.blastdb_name)
+	
+	METAGENOMICS (reads_for_alignment,params.kraken_db,params.blastdb_path,params.blastdb_name,params.kraken_confidence)
+	
+	meta_summary=METAGENOMICS.out.merged_report.map{ _sample, _blast, summary -> summary}.collect()
+	blast_hits=METAGENOMICS.out.merged_report.map{ _sample, blast, _summary -> blast}.collect()
+	bovreproseq_lims (version_file,interpret_results.out.collect(),meta_summary)
+
 	//generate report
 	rmd_file=file("${baseDir}/Bovreproseq_tabbed.Rmd")
-	meta_bracken=METAGENOMICS.out.bracken_output.map{ sample, file -> file }.collect()
-	meta_blast= METAGENOMICS.out.blast_best.map {sample, file -> file}.collect()
-	make_report(QCREADS.out.csv,METAGENOMICS.out.krona_output,AMPLICONS.out.mapped.map{sample, file -> file}.collect(),abricate.out.abricate.map{sample, file -> file}.collect(),interpret_results.out.collect(),rmd_file,mlst.out.collect(),AMPLICONS.out.cons_only.collect(),meta_bracken,meta_blast,IGVREPORT.out)
+	make_report(QCREADS.out.csv,METAGENOMICS.out.krona_output,AMPLICONS.out.mapped.map{_sample, file -> file}.collect(),abricate.out.abricate.map{_sample, file -> file}.collect(),interpret_results.out.collect(),rmd_file,mlst.out.collect(),AMPLICONS.out.cons_only.collect(),meta_summary,blast_hits,IGVREPORT.out)
 	
 	//generate metagenomics report
 	rmd_meta_file=file("${baseDir}/ont_metagenomics.Rmd")
-    make_metagenomics_report(QCREADS.out.csv,METAGENOMICS.out.krona_output,rmd_meta_file,meta_bracken,meta_blast)
+    make_metagenomics_report(QCREADS.out.csv,METAGENOMICS.out.krona_output,rmd_meta_file,meta_summary,blast_hits)
 	
 	
 	
